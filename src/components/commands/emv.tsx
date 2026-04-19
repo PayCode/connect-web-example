@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { PayCodeConnect } from "@paycode/connect";
-import { useState } from "react";
+import type { EMVData, PayCodeConnect } from "@paycode/connect";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ const formSchema = z.object({
 
 export const Emv = ({ pc }: EmvProps) => {
   const [useRandomAmounts, setUseRandomAmounts] = useState(false);
+  const didSetListeners = useRef(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -59,6 +60,18 @@ export const Emv = ({ pc }: EmvProps) => {
     if (checked) form.setValue("amount", "0.00");
     else form.setValue("amount", "");
   };
+
+  const handleEmvEvent = useCallback((data: EMVData) => {
+    // TODO: render this
+    console.log(data);
+  }, []);
+
+  useEffect(() => {
+    if (!didSetListeners.current && pc !== null) {
+      didSetListeners.current = true;
+      pc?.on("emvState", handleEmvEvent);
+    }
+  }, [pc, handleEmvEvent]);
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 w-full">
